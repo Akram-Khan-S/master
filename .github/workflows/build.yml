@@ -5,28 +5,30 @@ on:
     branches:
       - master
 
-
 jobs:
   build:
     name: Build
     runs-on: [self-hosted]
     steps:
+      # Checkout the code
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      # Optional: Run SonarQube analysis
       - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      - name: NPM Install
+
+      # Install dependencies
+      - name: npm install
         run: npm install
-        
-      - name: Docker build and push
+
+      # Docker build and push
+      - name: Build and Push Docker Image
         run: |
-          # Run commands to build and push Docker images
           docker build -t swiggy-clone .
-          docker tag swiggy-clone akramkhan29/swiggy-clone:latest
-          docker login -u ${{ secrets.Dockerhub_username }} -p ${{ secrets.Dockerhub_token }}
-          docker push akramkhan29/swiggy-clone:latest
+          docker tag swiggy-clone ${{ secrets.Dockerhub_username }}/swiggy-clone:latest
+          echo ${{ secrets.Dockerhub_token }} | docker login -u ${{ secrets.Dockerhub_username }} --password-stdin
+          docker push ${{ secrets.Dockerhub_username }}/swiggy-clone:latest
         env:
           DOCKER_CLI_ACI: 1
